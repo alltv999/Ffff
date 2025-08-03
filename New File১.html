@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bangla App Store</title>
+    <!-- Google Fonts for Bengali typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #4a90e2;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --light-text-color: #666666;
+            --header-height: 60px;
+            --footer-height: 60px;
+        }
+
+        /* General Body Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding-top: var(--header-height);
+            padding-bottom: var(--footer-height);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Notification Modal (Centered) --- */
+        #notification-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1002;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #notification-text {
+            font-size: 16px;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+        #close-notification {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        .notification-icon {
+            font-size: 40px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        /* Screenshot Modal */
+        #screenshot-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1004;
+            align-items: center;
+            justify-content: center;
+        }
+        #screenshot-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        #screenshot-modal-content img {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+        #close-screenshot {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        /* --- Header --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            background-color: var(--card-background);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .header-logo {
+            height: 36px;
+            width: 36px;
+            object-fit: cover;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #eee;
+            flex-shrink: 0;
+        }
+        
+        /* Search Bar with Icon */
+        .search-container {
+            flex-grow: 1;
+            margin: 0 10px;
+            position: relative;
+            max-width: calc(100% - 92px);
+        }
+        #search-bar {
+            width: 100%;
+            padding: 8px 15px 8px 35px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            background-color: #f5f5f5;
+            font-family: 'Noto Sans Bengali', sans-serif;
+        }
+        #search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #fff;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        /* --- Side Menu (Contact Form) --- */
+        #side-menu {
+            position: fixed;
+            top: 0;
+            left: -100%; /* Initially hidden */
+            width: 85%;
+            max-width: 300px;
+            height: 100%;
+            background-color: var(--card-background);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            z-index: 1003;
+            transition: left 0.3s ease-in-out;
+            padding: 20px 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        #side-menu.open {
+            left: 0;
+        }
+        .social-links {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+        .social-links a img {
+            width: 36px;
+            height: 36px;
+            transition: transform 0.2s;
+        }
+        .social-links a:hover img {
+            transform: scale(1.1);
+        }
+        #side-menu h3 {
+            margin-top: 0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: 'Noto Sans Bengali', sans-serif;
+            font-size: 14px;
+        }
+        #send-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        #menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: none;
+        }
+        #menu-overlay.show {
+            display: block;
+        }
+
+        /* --- Main Content Area --- */
+        main {
+            padding: 15px 10px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .content-section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-left: 5px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .app-card {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+            padding: 15px 10px;
+            transition: all 0.2s ease-in-out;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .app-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .app-card img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .app-card .title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* App Detail Page */
+        #app-detail-section {
+            display: none;
+            padding: 20px;
+        }
+        .app-detail-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .app-detail-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .app-detail-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .app-detail-description {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .app-detail-download {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 25px;
+        }
+        .app-screenshots {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .app-screenshot {
+            width: 32%;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .app-screenshot:hover {
+            transform: scale(1.02);
+        }
+        .back-button {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Search Results Section */
+        #search-section {
+            display: none;
+        }
+        #search-results {
+            min-height: 200px;
+        }
+        .search-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: var(--light-text-color);
+            font-size: 16px;
+        }
+
+        /* --- Bottom Navigation Bar (Updated Order & Style) --- */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--footer-height);
+            background-color: var(--card-background);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: none;
+            border: none;
+            font-size: 12px; /* Adjusted for better spacing with icon */
+            cursor: pointer;
+            padding: 5px;
+            color: var(--light-text-color);
+            border-top: 3px solid transparent; /* For active state */
+            transition: all 0.2s;
+            flex-grow: 1;
+            height: 100%;
+            max-width: 33.33%;
+        }
+        .nav-btn i {
+            font-size: 20px; /* Icon size */
+            margin-bottom: 3px; /* Space between icon and text */
+        }
+        .nav-btn.active {
+            color: var(--primary-color);
+            font-weight: 700;
+            border-top-color: var(--primary-color);
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 400px) {
+            .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            .app-card img {
+                width: 70px;
+                height: 70px;
+            }
+            #search-bar {
+                font-size: 15px;
+            }
+            .app-detail-logo {
+                width: 120px;
+                height: 120px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            main {
+                padding: 20px 15px;
+                max-width: 1200px;
+            }
+            .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 20px;
+            }
+            .app-card {
+                padding: 20px 15px;
+            }
+            .app-card img {
+                width: 80px;
+                height: 80px;
+            }
+            .app-card .title {
+                font-size: 16px;
+            }
+            #search-bar {
+                font-size: 16px;
+                padding: 10px 15px 10px 40px;
+            }
+            .search-icon {
+                left: 15px;
+            }
+            .header-logo {
+                height: 40px;
+                width: 40px;
+            }
+            .app-detail-header {
+                flex-direction: row;
+                align-items: flex-start;
+                text-align: left;
+            }
+            .app-detail-logo {
+                margin-right: 30px;
+                margin-bottom: 0;
+            }
+            .app-detail-title, .app-detail-description {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Notification Modal (Centered) -->
+    <div id="notification-modal">
+        <div class="notification-content">
+            <button id="close-notification"><i class="fas fa-times"></i></button>
+            <div class="notification-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div id="notification-text"></div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshot-modal">
+        <span id="close-screenshot"><i class="fas fa-times"></i></span>
+        <div id="screenshot-modal-content">
+            <img id="full-screenshot" src="" alt="Full Screenshot">
+        </div>
+    </div>
+
+    <!-- Side Menu (Contact) -->
+    <div id="menu-overlay"></div>
+    <div id="side-menu">
+        <h3>Contact Us</h3>
+        <div class="social-links">
+            <a id="youtube-link" href="#" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="YouTube"></a>
+            <a id="telegram-link" href="#" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram"></a>
+            <a id="facebook-link" href="#" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook"></a>
+        </div>
+        <div class="form-group">
+            <textarea id="message-box" rows="4" placeholder="Your feedback..."></textarea>
+        </div>
+        <div class="form-group">
+            <input type="email" id="email-box" placeholder="Your email">
+        </div>
+        <button id="send-button">Send</button>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <img id="left-logo" class="header-logo" src="https://placehold.co/100x100/EEE/31343C?text=L" alt="Menu">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-bar" placeholder="Search apps & games...">
+        </div>
+        <img id="right-logo" class="header-logo" src="https://placehold.co/100x100/31343C/EEE?text=R" alt="Profile">
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home Section (Default Active) -->
+        <div id="home-section" class="content-section active">
+            <h2>Home</h2>
+            <div id="home-grid" class="grid-container">
+                <!-- Home content will be a mix of apps and games -->
+            </div>
+        </div>
+        
+        <!-- App Section -->
+        <div id="app-section" class="content-section">
+            <h2>Apps</h2>
+            <div id="app-grid" class="grid-container">
+                <!-- App cards will be inserted here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Game Section -->
+        <div id="game-section" class="content-section">
+            <h2>Games</h2>
+            <div id="game-grid" class="grid-container">
+                <!-- Game cards will be inserted here by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Search Results Section -->
+        <div id="search-section" class="content-section">
+            <h2 class="search-title">Search Results</h2>
+            <div id="search-results" class="grid-container">
+                <!-- Search results will be shown here -->
+            </div>
+        </div>
+        
+        <!-- App Detail Section -->
+        <div id="app-detail-section" class="content-section">
+            <a href="#" class="back-button" id="back-button"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="app-detail-header">
+                <img id="app-detail-logo" class="app-detail-logo" src="" alt="App Logo">
+                <div>
+                    <h1 id="app-detail-title" class="app-detail-title"></h1>
+                    <p id="app-detail-description" class="app-detail-description"></p>
+                </div>
+            </div>
+            <a id="app-detail-download" href="#" class="app-detail-download">Download</a>
+            <div class="app-screenshots">
+                <img id="app-screenshot-left" class="app-screenshot" src="" alt="Screenshot 1">
+                <img id="app-screenshot-center" class="app-screenshot" src="" alt="Screenshot 2">
+                <img id="app-screenshot-right" class="app-screenshot" src="" alt="Screenshot 3">
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Updated Order with Icons) -->
+    <footer>
+        <button id="nav-home" class="nav-btn active">
+            <i class="fas fa-house"></i>
+            Home
+        </button>
+        <button id="nav-app" class="nav-btn">
+            <i class="fas fa-grip"></i>
+            Apps
+        </button>
+        <button id="nav-game" class="nav-btn">
+            <i class="fas fa-gamepad"></i>
+            Games
+        </button>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- Ad Script -->
+    <script type='text/javascript' src='//pl27192458.profitableratecpm.com/3a/ef/e0/3aefe0a5bae9f97df65b743d5a927ab6.js'></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDKKeAm2rHJSa0Y23P4AKw5G6MOEex18BI",
+          authDomain: "bangla-1e252.firebaseapp.com",
+          databaseURL: "https://bangla-1e252-default-rtdb.firebaseio.com",
+          projectId: "bangla-1e252",
+          storageBucket: "bangla-1e252.appspot.com",
+          messagingSenderId: "27143682454",
+          appId: "1:27143682454:web:129ee98d6d2cf49920c5b7",
+          measurementId: "G-583V97LGJG"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // DOM Elements
+        const notificationModal = document.getElementById('notification-modal');
+        const notificationText = document.getElementById('notification-text');
+        const closeNotificationBtn = document.getElementById('close-notification');
+        
+        const screenshotModal = document.getElementById('screenshot-modal');
+        const fullScreenshot = document.getElementById('full-screenshot');
+        const closeScreenshotBtn = document.getElementById('close-screenshot');
+        
+        const leftLogo = document.getElementById('left-logo');
+        const sideMenu = document.getElementById('side-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+        
+        const sendButton = document.getElementById('send-button');
+        const messageBox = document.getElementById('message-box');
+        const emailBox = document.getElementById('email-box');
+
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const contentSections = document.querySelectorAll('.content-section');
+        
+        const appGrid = document.getElementById('app-grid');
+        const gameGrid = document.getElementById('game-grid');
+        const homeGrid = document.getElementById('home-grid');
+        const searchResults = document.getElementById('search-results');
+        const searchSection = document.getElementById('search-section');
+        const searchBar = document.getElementById('search-bar');
+        
+        // App Detail Elements
+        const appDetailSection = document.getElementById('app-detail-section');
+        const appDetailLogo = document.getElementById('app-detail-logo');
+        const appDetailTitle = document.getElementById('app-detail-title');
+        const appDetailDescription = document.getElementById('app-detail-description');
+        const appDetailDownload = document.getElementById('app-detail-download');
+        const appScreenshotLeft = document.getElementById('app-screenshot-left');
+        const appScreenshotCenter = document.getElementById('app-screenshot-center');
+        const appScreenshotRight = document.getElementById('app-screenshot-right');
+        const backButton = document.getElementById('back-button');
+        
+        let allPosts = {}; // To store all posts locally for faster searching
+
+        // --- Functions ---
+        function createAppCard(post) {
+            return `
+                <div class="app-card" data-id="${post.id}" data-title="${post.title.toLowerCase()}">
+                    <img src="${post.imageUrl}" alt="${post.title}" loading="lazy">
+                    <div class="title">${post.title}</div>
+                </div>
+            `;
+        }
+
+        function displayPosts(searchTerm = '') {
+            appGrid.innerHTML = '';
+            gameGrid.innerHTML = '';
+            homeGrid.innerHTML = '';
+
+            const filteredPosts = Object.values(allPosts).filter(post => 
+                post.title.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            filteredPosts.reverse().forEach(post => { // Show newest first
+                const cardHTML = createAppCard(post);
+                if (post.category === 'app') {
+                    appGrid.innerHTML += cardHTML;
+                } else if (post.category === 'game') {
+                    gameGrid.innerHTML += cardHTML;
+                }
+                homeGrid.innerHTML += cardHTML;
+            });
+
+            // Add click event to all app cards
+            document.querySelectorAll('.app-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-id');
+                    showAppDetail(postId);
+                });
+            });
+        }
+
+        function showAppDetail(postId) {
+            const post = allPosts[postId];
+            if (!post) return;
+
+            // Hide all other sections
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            
+            // Set app detail content
+            appDetailLogo.src = post.imageUrl;
+            appDetailTitle.textContent = post.title;
+            appDetailDescription.textContent = post.description || 'No description available';
+            appDetailDownload.href = post.downloadUrl;
+            
+            // Set screenshots (if available)
+            appScreenshotLeft.src = post.screenshot1 || 'https://placehold.co/300x500/EEE/31343C?text=No+Image';
+            appScreenshotCenter.src = post.screenshot2 || 'https://placehold.co/300x500/EEE/31343C?text=No+Image';
+            appScreenshotRight.src = post.screenshot3 || 'https://placehold.co/300x500/EEE/31343C?text=No+Image';
+            
+            // Add click events to screenshots
+            [appScreenshotLeft, appScreenshotCenter, appScreenshotRight].forEach((screenshot, index) => {
+                screenshot.onclick = () => {
+                    const screenshotUrl = [post.screenshot1, post.screenshot2, post.screenshot3][index];
+                    if (screenshotUrl) {
+                        showFullScreenshot(screenshotUrl);
+                    }
+                };
+            });
+            
+            // Show the detail section
+            appDetailSection.style.display = 'block';
+            appDetailSection.classList.add('active');
+        }
+
+        function showFullScreenshot(url) {
+            fullScreenshot.src = url;
+            screenshotModal.style.display = 'flex';
+        }
+
+        function showSearchResults(searchTerm) {
+            if (!searchTerm.trim()) {
+                searchSection.style.display = 'none';
+                return;
+            }
+
+            const filteredPosts = Object.values(allPosts).filter(post => 
+                post.title.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            searchResults.innerHTML = '';
+            
+            if (filteredPosts.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">No results found</div>';
+            } else {
+                filteredPosts.reverse().forEach(post => {
+                    searchResults.innerHTML += createAppCard(post);
+                });
+                
+                // Add click event to search result cards
+                document.querySelectorAll('#search-results .app-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-id');
+                        showAppDetail(postId);
+                    });
+                });
+            }
+
+            // Hide all other sections and show search results
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            searchSection.style.display = 'block';
+            searchSection.classList.add('active');
+        }
+
+        // --- Event Listeners ---
+        closeNotificationBtn.addEventListener('click', () => {
+            notificationModal.style.display = 'none';
+        });
+
+        closeScreenshotBtn.addEventListener('click', () => {
+            screenshotModal.style.display = 'none';
+        });
+
+        screenshotModal.addEventListener('click', (e) => {
+            if (e.target === screenshotModal) {
+                screenshotModal.style.display = 'none';
+            }
+        });
+
+        leftLogo.addEventListener('click', () => {
+            sideMenu.classList.add('open');
+            menuOverlay.classList.add('show');
+        });
+
+        menuOverlay.addEventListener('click', () => {
+            sideMenu.classList.remove('open');
+            menuOverlay.classList.remove('show');
+        });
+        
+        sendButton.addEventListener('click', () => {
+            const message = messageBox.value;
+            const email = emailBox.value;
+            if (!message.trim() || !email.trim()) {
+                alert('Please enter both your feedback and email.');
+                return;
+            }
+            database.ref('feedback').push({
+                message: message,
+                email: email,
+                timestamp: Date.now()
+            }).then(() => {
+                alert('Your feedback has been submitted. Thank you!');
+                messageBox.value = '';
+                emailBox.value = '';
+                sideMenu.classList.remove('open');
+                menuOverlay.classList.remove('show');
+            }).catch(error => alert('Error: ' + error.message));
+        });
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                contentSections.forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                btn.classList.add('active');
+                const sectionId = btn.id.replace('nav-', '') + '-section';
+                document.getElementById(sectionId).style.display = 'block';
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Hide search results when switching sections
+                searchSection.style.display = 'none';
+                
+                // Scroll to top when switching sections
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        searchBar.addEventListener('input', (e) => {
+            const searchTerm = e.target.value;
+            if (searchTerm.trim()) {
+                showSearchResults(searchTerm);
+            } else {
+                searchSection.style.display = 'none';
+                // Show the active section again
+                const activeBtn = document.querySelector('.nav-btn.active');
+                if (activeBtn) {
+                    const sectionId = activeBtn.id.replace('nav-', '') + '-section';
+                    document.getElementById(sectionId).style.display = 'block';
+                    document.getElementById(sectionId).classList.add('active');
+                }
+            }
+        });
+
+        // Handle search on Enter key
+        searchBar.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                showSearchResults(searchBar.value);
+            }
+        });
+
+        // Back button functionality
+        backButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            appDetailSection.style.display = 'none';
+            appDetailSection.classList.remove('active');
+            
+            // Show the previous active section
+            const activeBtn = document.querySelector('.nav-btn.active');
+            if (activeBtn) {
+                const sectionId = activeBtn.id.replace('nav-', '') + '-section';
+                document.getElementById(sectionId).style.display = 'block';
+                document.getElementById(sectionId).classList.add('active');
+            }
+        });
+
+        // --- Firebase Data Fetching ---
+        database.ref('notification').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.text) {
+                notificationText.textContent = data.text;
+                notificationModal.style.display = 'flex';
+                
+                // Auto close after 5 seconds
+                setTimeout(() => {
+                    notificationModal.style.display = 'none';
+                }, 5000);
+            }
+        });
+        
+        database.ref('config').on('value', (snapshot) => {
+            const config = snapshot.val();
+            if (config) {
+                if (config.leftLogoUrl) document.getElementById('left-logo').src = config.leftLogoUrl;
+                if (config.rightLogoUrl) document.getElementById('right-logo').src = config.rightLogoUrl;
+                if (config.youtubeUrl) document.getElementById('youtube-link').href = config.youtubeUrl;
+                if (config.telegramUrl) document.getElementById('telegram-link').href = config.telegramUrl;
+                if (config.facebookUrl) document.getElementById('facebook-link').href = config.facebookUrl;
+            }
+        });
+
+        database.ref('posts').on('value', (snapshot) => {
+            const posts = snapshot.val() || {};
+            // Add IDs to each post
+            allPosts = Object.keys(posts).reduce((acc, key) => {
+                acc[key] = { ...posts[key], id: key };
+                return acc;
+            }, {});
+            displayPosts(); // Display all posts initially
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 600 && sideMenu.classList.contains('open')) {
+                menuOverlay.classList.remove('show');
+                sideMenu.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
